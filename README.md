@@ -11,7 +11,7 @@ But we can create a trick, we will add an SSH gateway to the swarm network and c
 To open a gatweay run container by using the command bellow:
 
 > [!CAUTION]
-> Please watch the mount point! It binds a special `authorized_keys` file and you have to create it first! This is the place where you grant users right to use the tunnel.
+> Please watch the mount point! It binds a special `authorized_keys` file and you have to create it first! This is the place where you grant users right to use the gateway.
 
 ```sh
 docker run -d --rm \
