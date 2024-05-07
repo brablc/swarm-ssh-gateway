@@ -23,12 +23,13 @@ Host mng.example.com
 Host swarm-ssh-gateway-STACK_NAME
     HostName 127.0.0.1
     User root
-    ProxyJump mng.example.com
     Port 8022
+    ProxyJump mng.example.com
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null
-    # These are names of your services from your stack
-    # Resolution for automatically
+    RequestTTY no
+    ExitOnForwardFailure yes
+    # These are names of your services from your stack - hostname reesolution works automatically
     LocalForward 127.0.0.1:15672 rabbitmq:15672
     LocalForward 127.0.0.1:5432 postgres:5432
     LocalForward 127.0.0.1:8123 clickhouse1:8123
@@ -38,5 +39,11 @@ Host swarm-ssh-gateway-STACK_NAME
 Now you can start the tunnel:
 
 ```sh
-ssh -T swarm-ssh-gateway-STACK_NAME
+ssh -f -N swarm-ssh-gateway-STACK_NAME
+```
+
+And stop the tunnel:
+
+```sh
+pkill -f "ssh -f -N swarm-ssh-gateway-STACK_NAME"
 ```
