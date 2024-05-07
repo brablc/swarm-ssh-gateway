@@ -1,30 +1,53 @@
 # swarm-ssh-gateway
 
-You may want to access some services in your docker swarm from your local machine over an SSH tunnel. But the services do not expose ports by default (they use the mesh network) and IT IS GOOD as they are not exposed on public IPs.
+You may want to access some services in your docker swarm from your local machine over an SSH tunnel (RabbitMQ Admin console for one). But swarm services are not exposed in host mode by default and you cannot access them even when you are logged in.
 
-In order to create a tunnel, we need to add an SSH gateway to our stack network(s):
+But we can create a trick, we will add an SSH gateway to the swarm network and create tunnels to access the ports. The beauty is, that it would solve service name resolution for free.
+
+## Gateway part (your ops role)
+
+### Open gateway
+
+To open a gatweay run container by using the command bellow:
+
+> [!CAUTION]
+> Please watch the mount point! It binds a special `authorized_keys` file and you have to create it first! This is the place where you grant users right to use the tunnel.
 
 ```sh
-docker run -d --rm --name swarm-ssh-gateway-STACK_NAME \
-  -v /root/.ssh/authorized_keys:/root/.ssh/authorized_keys \
+docker run -d --rm \
+  --name swarm-ssh-gateway-STACK_NAME \
   --network STACK_NETWORK \
+  --volume /root/.ssh/authorized_keys.swarm-ssh-gateway:/root/.ssh/authorized_keys \
   -p 127.0.0.1:8022:22 brablc/swarm-ssh-gateway
 ```
 
-Unfortunatelly it cannot be added as swarm service, because we would need to publish ports in host mode, but swarm does not let us to choose on which interface.
+### Close gateway
 
-On your personal computer you would modify `.ssh/config`:
+```sh
+docker exec swarm-ssh-gateway-STACK_NAME kill 1
+```
+
+> [!NOTE]
+> Unfortunatelly the gateway cannot be added as swarm service, because we would need to publish port in host mode i.e. on all network interfaces and create a security risk.
+
+
+## Tunneling part (your dev role)
+
+### Configure ssh config
+
+On your personal computer modify your `~/.ssh/config`:
 
 ```
-Host mng.example.com
+Host jump.example.com
     HostName mng.example.com
+    User dev1
     ForwardAgent yes
 
 Host swarm-ssh-gateway-STACK_NAME
     HostName 127.0.0.1
     User root
     Port 8022
-    ProxyJump mng.example.com
+    ProxyJump jump.example.com
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null
     RequestTTY no
@@ -36,13 +59,25 @@ Host swarm-ssh-gateway-STACK_NAME
     LocalForward 127.0.0.1:9000 clickhouse1:9000
 ```
 
-Now you can start the tunnel:
+### Open tunnel
+
+Now you can open the tunnel:
 
 ```sh
 ssh -N swarm-ssh-gateway-STACK_NAME &
 ```
 
-And stop the tunnel:
+
+### Use tunnel
+
+
+```sh
+nmap -p 15672 127.0.0.1
+```
+
+### Close tunnel
+
+When you are done, you can stop the tunnel:
 
 ```sh
 $ jobs
