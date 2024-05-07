@@ -39,11 +39,21 @@ Host swarm-ssh-gateway-STACK_NAME
 Now you can start the tunnel:
 
 ```sh
-ssh -f -N swarm-ssh-gateway-STACK_NAME
+ssh -N swarm-ssh-gateway-STACK_NAME &
 ```
 
 And stop the tunnel:
 
 ```sh
-pkill -f "ssh -f -N swarm-ssh-gateway-STACK_NAME"
+$ jobs
+[1]+  Running                 ssh -N swarm-ssh-gateway-STACK_NAME &
+ ~
+$ kill %1
+[1]+  Done                    ssh -N swarm-ssh-gateway-STACK_NAME
+
+# Or
+
+$ fg
+ssh -N swarm-ssh-gateway-STACK_NAME
+^C
 ```
