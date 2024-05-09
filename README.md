@@ -101,4 +101,10 @@ $ kill %1
 $ fg
 ssh -N swarm-ssh-gateway-STACK_NAME
 ^C
+
+# View running ssh processes
+pgrep -lf ssh
+
+# Kill process by name
+pkill -f swarm-ssh-gateway-STACK_NAME
 ```
